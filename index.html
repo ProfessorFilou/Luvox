@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#c56a4a">
 <title>ProfessorFilou Rechner · Ultra-Präzision</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js"></script>
+<script>window.Decimal||document.write('<script src="https://cdn.jsdelivr.net/npm/decimal.js@10/decimal.min.js"><\/script>')</script>
 <style>
 :root{
   /* Warm cream + terracotta */
@@ -1166,7 +1167,7 @@ document.getElementById('number').onkeydown=e=>{if(e.key==='Enter')berechneWurze
         return calc('isprime('+m[1]+')');
       }
       // translate: "translate hello to de" / "übersetze hello nach de"
-      if((m=s.match(/^(?:translate|übersetze|uebersetze)\s+(.+?)\s+(?:to|nach|in)\s+([a-z]{2})$/i))){
+      if((m=s.match(/^(?:translate|übersetze|uebersetze)\s+(.+?)\s+(?:to|nach|in)\s+([a-zäöü]{2,14})$/i))&&langCode(m[2])){
         return {v:null,t:'Übersetzen',async:'translate',text:m[1].trim(),lang:m[2].toLowerCase(),formula:'translate → '+m[2]};
       }
       // define / dictionary: "define serendipity" / "define Apfel"
@@ -1179,15 +1180,15 @@ document.getElementById('number').onkeydown=e=>{if(e.key==='Enter')berechneWurze
       }
 
       // currency: "100 USD to EUR" / "50 euro in dollar"
-      if((m=s.match(/^(\d+(?:\.\d+)?)\s*([a-z]{3})\s+(?:to|in|nach|as)\s+([a-z]{3})$/i))){
-        return {v:null,t:'Währung',async:'fx',amount:+m[1],from:m[2].toUpperCase(),to:m[3].toUpperCase(),formula:m[1]+' '+m[2]+' → '+m[3]};
+      if((m=s.match(/^(\d+(?:[.,]\d+)?)\s*([a-z]{3})\s+(?:to|in|nach|as)\s+([a-z]{3})$/i))){
+        return {v:null,t:'Währung',async:'fx',amount:+m[1].replace(',','.'),from:m[2].toUpperCase(),to:m[3].toUpperCase(),formula:m[1]+' '+m[2]+' → '+m[3]};
       }
       // "convert 100 dollars to euros" simplified
-      if((m=s.match(/^(?:convert\s+)?(\d+(?:\.\d+)?)\s*(dollars?|euros?|euro|usd|eur|gbp|chf|jpy|cny)\s+(?:to|in|nach)\s+(dollars?|euros?|euro|usd|eur|gbp|chf|jpy|cny)$/i))){
+      if((m=s.match(/^(?:convert\s+)?(\d+(?:[.,]\d+)?)\s*(dollars?|euros?|euro|usd|eur|gbp|chf|jpy|cny)\s+(?:to|in|nach)\s+(dollars?|euros?|euro|usd|eur|gbp|chf|jpy|cny)$/i))){
         const map={dollar:'USD',dollars:'USD',euro:'EUR',euros:'EUR',usd:'USD',eur:'EUR',gbp:'GBP',chf:'CHF',jpy:'JPY',cny:'CNY'};
         const from=map[m[2].toLowerCase()]||m[2].toUpperCase();
         const to=map[m[3].toLowerCase()]||m[3].toUpperCase();
-        return {v:null,t:'Währung',async:'fx',amount:+m[1],from,to,formula:m[1]+' '+from+' → '+to};
+        return {v:null,t:'Währung',async:'fx',amount:+m[1].replace(',','.'),from,to,formula:m[1]+' '+from+' → '+to};
       }
 
       // chemical element: "atomic number of sulfur" / "element S" / "what is sulfur"
@@ -1745,155 +1746,182 @@ document.getElementById('number').onkeydown=e=>{if(e.key==='Enter')berechneWurze
     }
   }
 
+  /* ===== API-Schicht v2: Timeout, Retry, Cache, Fallbacks ===== */
+  class ApiError extends Error{constructor(m,s){super(m);this.status=s||0;}}
+  const TTL={fx:36e5,wiki:864e5,country:864e5,weather:6e5,define:864e5,translate:864e5};
+  const apiCache=new Map();
+  async function apiJSON(url,opt){
+    opt=opt||{};
+    const ttl=opt.ttl||0,retries=opt.retries==null?1:opt.retries;
+    const hit=apiCache.get(url);
+    if(hit&&Date.now()-hit.t<ttl) return hit.d;
+    let err;
+    for(let i=0;i<=retries;i++){
+      const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),opt.timeout||8000);
+      try{
+        const res=await fetch(url,{signal:ctl.signal});
+        if(res.status===404) return null;
+        if(res.status===429) throw new ApiError('Zu viele Anfragen – bitte kurz warten und erneut versuchen.',429);
+        if(!res.ok) throw new ApiError('Dienst antwortet mit HTTP '+res.status+'.',res.status);
+        const d=await res.json();
+        if(ttl) apiCache.set(url,{t:Date.now(),d});
+        return d;
+      }catch(e){
+        err=e.name==='AbortError'?new ApiError('Zeitüberschreitung – der Dienst antwortet nicht.'):e;
+        if(err.status&&err.status<500) break;
+      }finally{clearTimeout(tm);}
+      await new Promise(r=>setTimeout(r,400*(i+1)));
+    }
+    throw err instanceof ApiError?err:new ApiError(navigator.onLine?'Dienst nicht erreichbar.':'Keine Internetverbindung.');
+  }
+
+  const LANGS={deutsch:'de',german:'de',englisch:'en',english:'en',französisch:'fr',franzoesisch:'fr',french:'fr',spanisch:'es',spanish:'es',italienisch:'it',italian:'it',portugiesisch:'pt',portuguese:'pt',niederländisch:'nl',dutch:'nl',polnisch:'pl',polish:'pl',türkisch:'tr',turkish:'tr',russisch:'ru',russian:'ru',japanisch:'ja',japanese:'ja',chinesisch:'zh',chinese:'zh'};
+  const langCode=s=>{s=String(s).toLowerCase();return s.length===2?s:(LANGS[s]||null);};
+  const WMO={0:'Klar',1:'Überwiegend klar',2:'Teilweise bewölkt',3:'Bedeckt',45:'Nebel',48:'Reifnebel',51:'Leichter Nieselregen',53:'Nieselregen',55:'Starker Nieselregen',56:'Gefrierender Nieselregen',57:'Starker gefrierender Nieselregen',61:'Leichter Regen',63:'Regen',65:'Starkregen',66:'Gefrierender Regen',67:'Starker gefrierender Regen',71:'Leichter Schneefall',73:'Schneefall',75:'Starker Schneefall',77:'Schneegriesel',80:'Leichte Schauer',81:'Schauer',82:'Heftige Schauer',85:'Leichte Schneeschauer',86:'Starke Schneeschauer',95:'Gewitter',96:'Gewitter mit Hagel',99:'Gewitter mit starkem Hagel'};
+
+  // Zahlen-Fakten: komplett lokal (numbersapi.com ist nur HTTP, ohne CORS – im Browser nicht nutzbar)
+  function isqrt(n){if(n<2n)return n;let x=BigInt(Math.floor(Math.sqrt(Number(n))));while(x*x>n)x--;while((x+1n)*(x+1n)<=n)x++;return x;}
+  const isSq=n=>{const r=isqrt(n);return r*r===n;};
+  function numberFacts(s){
+    const b=BigInt(s),n=Number(b),F=[];
+    F.push(['Darstellung','Binär: '+b.toString(2)+'\nHex: '+b.toString(16).toUpperCase()+'\nOktal: '+b.toString(8)]);
+    F.push(['Quersumme',[...s].reduce((a,c)=>a+ +c,0)+' · '+s.length+' Stellen']);
+    F.push(['Eigenschaften',[b%2n===0n?'gerade':'ungerade',isSq(b)?'Quadratzahl':'',s===[...s].reverse().join('')?'Palindrom':'',
+      isSq(5n*b*b+4n)||isSq(5n*b*b-4n)?'Fibonacci-Zahl':'',isSq(8n*b+1n)?'Dreieckszahl':''].filter(Boolean).join(' · ')]);
+    if(b>=1n&&b<=4000n-1n){
+      const R=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+      let m=n,o='';R.forEach(([v,t])=>{while(m>=v){o+=t;m-=v;}});F.push(['Römisch',o]);
+    }
+    if(Number.isSafeInteger(n)&&n>=1&&n<=1e13){
+      let m=n;const fac=[];
+      for(let p=2;p*p<=m;p+=p===2?1:2){while(m%p===0){fac.push(p);m/=p;}}
+      if(m>1)fac.push(m);
+      const c={};fac.forEach(p=>c[p]=(c[p]||0)+1);
+      const ps=Object.entries(c).map(([p,e])=>[BigInt(p),e]);
+      const tau=ps.reduce((a,[,e])=>a*(e+1),1);
+      const sigma=ps.reduce((a,[p,e])=>a*((p**BigInt(e+1)-1n)/(p-1n)),1n);
+      const prime=n>1&&fac.length===1;
+      F.push(['Primzahl',n===1?'1 ist weder prim noch zusammengesetzt':prime?'Ja':'Nein']);
+      if(n>1&&!prime) F.push(['Primfaktoren',ps.map(([p,e])=>e>1?p+'^'+e:p).join(' · ')]);
+      const aliq=sigma-b;
+      F.push(['Teiler',tau+' Teiler · Summe '+sigma+(n>1?' · '+(aliq===b?'vollkommene Zahl':aliq>b?'abundant':'defizient'):'')]);
+    }
+    if(b>=1n&&b<=10n**15n){let x=b,st=0;while(x!==1n&&st<5000){x=x%2n===0n?x/2n:3n*x+1n;st++;}F.push(['Collatz',st+' Schritte bis 1']);}
+    return F;
+  }
+
+  async function fxRate(from,to){
+    if(from===to) return {rate:1,src:'identische Währung'};
+    try{
+      const d=await apiJSON('https://open.er-api.com/v6/latest/'+encodeURIComponent(from),{ttl:TTL.fx});
+      if(d&&d.result==='success'&&d.rates&&d.rates[to]!=null) return {rate:d.rates[to],src:'ExchangeRate-API (open.er-api.com)',date:d.time_last_update_utc};
+    }catch(e){ if(e.status===429) throw e; }
+    const d=await apiJSON('https://api.frankfurter.dev/v1/latest?base='+encodeURIComponent(from)+'&symbols='+encodeURIComponent(to),{ttl:TTL.fx});
+    if(d&&d.rates&&d.rates[to]!=null) return {rate:d.rates[to],src:'Frankfurter (EZB-Referenzkurse)',date:d.date};
+    throw new Error('Kein Kurs für '+from+' → '+to+' gefunden. Bitte ISO-Codes nutzen (USD, EUR, CHF, GBP …).');
+  }
+
+  async function wikiLookup(topic){
+    const de=/[äöüß]|^(was|wer|wikipedia)\s/i.test(topic+' '+q.value);
+    for(const lang of de?['de','en']:['en','de']){
+      try{
+        const os=await apiJSON('https://'+lang+'.wikipedia.org/w/api.php?action=opensearch&format=json&origin=*&limit=1&redirects=resolve&search='+encodeURIComponent(topic),{ttl:TTL.wiki});
+        const title=os&&os[1]&&os[1][0];
+        if(!title) continue;
+        const d=await apiJSON('https://'+lang+'.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(title.replace(/ /g,'_')),{ttl:TTL.wiki});
+        if(d&&d.extract&&d.type!=='disambiguation')
+          return {title:d.title||title,text:d.extract,lang,url:d.content_urls&&d.content_urls.desktop&&d.content_urls.desktop.page};
+      }catch(e){ if(e.status===429) throw e; }
+    }
+    return null;
+  }
+
   async function runAsyncQuery(r){
     status.classList.add('is-busy');
     status.textContent='Laden …';
     try{
       if(r.async==='translate'){
-        const url2='https://api.mymemory.translated.net/get?q='+encodeURIComponent(r.text)+'&langpair=autodetect|'+encodeURIComponent(r.lang);
-        const res=await fetch(url2);
-        const data=await res.json();
-        const translated=(data&&data.responseData&&data.responseData.translatedText)||'—';
-        displayResult({
-          v:translated,plain:translated,t:'Übersetzen',formula:r.text+' → '+r.lang,
-          pods:[{title:'Original',body:r.text},{title:'Translation ('+r.lang+')',body:translated}]
-        },q.value);
+        const lang=langCode(r.lang);
+        if(!lang) throw new Error('Unbekannte Zielsprache „'+r.lang+'“ (z. B. de, en, fr, es).');
+        if(r.text.length>500) throw new Error('Text zu lang (max. 500 Zeichen).');
+        const data=await apiJSON('https://api.mymemory.translated.net/get?q='+encodeURIComponent(r.text)+'&langpair=autodetect|'+lang,{ttl:TTL.translate});
+        const t=data&&data.responseData&&data.responseData.translatedText;
+        if(!data||+data.responseStatus!==200||!t||/MYMEMORY WARNING|INVALID|QUERY LENGTH/i.test(t)){
+          if(/DISTINCT/i.test(t||'')) throw new Error('Der Text ist bereits in der Zielsprache.');
+          if(/MYMEMORY WARNING/i.test(t||'')) throw new Error('Tageslimit des Übersetzungsdienstes erreicht – bitte später erneut versuchen.');
+          throw new Error('Übersetzung fehlgeschlagen'+(data&&data.responseDetails?': '+data.responseDetails:'.'));
+        }
+        displayResult({v:t,plain:t,t:'Übersetzen',formula:r.text+' → '+lang,
+          pods:[{title:'Original',body:r.text},{title:'Übersetzung ('+lang+')',body:t},{title:'Quelle',body:'MyMemory'}]},q.value);
       }else if(r.async==='define'){
-        const word=r.word;
-        const res=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(word));
-        if(!res.ok){
-          displayResult({v:'Keine Definition für „'+word+'“.\nTipp: englisches Wort, oder: wiki '+word,plain:word,t:'Wörterbuch',formula:'define '+word},q.value);
+        const d=await apiJSON('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(r.word),{ttl:TTL.define});
+        if(!d||!d[0]){
+          displayResult({v:'Keine englische Definition für „'+r.word+'“.\nTipp: wiki '+r.word,plain:r.word,t:'Wörterbuch',formula:'define '+r.word},q.value);
         }else{
-          const data=await res.json();
-          const entry=data[0];
-          const phonetic=(entry.phonetic||(entry.phonetics&&entry.phonetics[0]&&entry.phonetics[0].text)||'');
-          const meanings=(entry.meanings||[]).slice(0,3);
-          const lines=[];
-          const pods=[{title:'Word',body:entry.word+(phonetic?'  ·  '+phonetic:'')}];
-          meanings.forEach(m=>{
-            const defs=(m.definitions||[]).slice(0,2).map(d=>d.definition);
-            lines.push(m.partOfSpeech+': '+defs.join(' | '));
-            pods.push({title:m.partOfSpeech,body:defs.join('\n')});
+          const e=d[0],ph=e.phonetic||((e.phonetics||[]).find(p=>p.text)||{}).text||'';
+          const pods=[{title:'Wort',body:e.word+(ph?'  ·  '+ph:'')}],lines=[];
+          (e.meanings||[]).slice(0,3).forEach(m=>{
+            const defs=(m.definitions||[]).slice(0,2),ex=defs.map(x=>x.example).filter(Boolean)[0];
+            lines.push(m.partOfSpeech+': '+defs.map(x=>x.definition).join(' | '));
+            pods.push({title:m.partOfSpeech,body:defs.map(x=>x.definition).join('\n')+(ex?'\n„'+ex+'“':'')});
+            if(m.synonyms&&m.synonyms.length) pods.push({title:'Synonyme ('+m.partOfSpeech+')',body:m.synonyms.slice(0,8).join(', ')});
           });
-          displayResult({v:entry.word+(phonetic?' ('+phonetic+')':'')+'\n'+lines.join('\n'),plain:lines.join('\n'),t:'Wörterbuch',formula:'define '+entry.word,pods},q.value);
+          displayResult({v:e.word+(ph?' ('+ph+')':'')+'\n'+lines.join('\n'),plain:lines.join('\n'),t:'Wörterbuch',formula:'define '+e.word,pods},q.value);
         }
       }else if(r.async==='wiki'){
-        const topic=r.topic;
-        const titles=[topic,topic.charAt(0).toUpperCase()+topic.slice(1)];
-        let summary=null,title=topic;
-        for(const t of titles){
-          try{
-            const res=await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(t));
-            if(res.ok){
-              const data=await res.json();
-              if(data.type!=='disambiguation'&&data.extract){
-                summary=data.extract;title=data.title||t;
-                break;
-              }
-            }
-          }catch(_){}
-        }
-        // German fallback
-        if(!summary){
-          try{
-            const res=await fetch('https://de.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(topic));
-            if(res.ok){
-              const data=await res.json();
-              if(data.extract){summary=data.extract;title=data.title||topic;}
-            }
-          }catch(_){}
-        }
-        if(summary){
-          displayResult({
-            v:summary,plain:summary,t:'Wissen',formula:title,
-            pods:[
-              {title:'Wikipedia',body:title},
-              {title:'Summary',body:summary.slice(0,600)+(summary.length>600?'…':'')}
-            ]
-          },q.value);
-        }else{
-          displayResult({v:'Nichts gefunden zu „'+topic+'“.\nVersuche: wiki <Begriff> oder define <english word>',t:'Wissen',formula:topic},q.value);
-        }
+        const w=await wikiLookup(r.topic);
+        if(w) displayResult({v:w.text,plain:w.text,t:'Wissen',formula:w.title,
+          pods:[{title:'Wikipedia ('+w.lang+')',body:w.title+(w.url?'\n'+w.url:'')},{title:'Zusammenfassung',body:w.text.slice(0,600)+(w.text.length>600?'…':'')}]},q.value);
+        else displayResult({v:'Nichts gefunden zu „'+r.topic+'“.\nVersuche: wiki <Begriff> oder define <english word>',t:'Wissen',formula:r.topic},q.value);
       }else if(r.async==='fx'){
-        const res=await fetch('https://open.er-api.com/v6/latest/'+encodeURIComponent(r.from));
-        const data=await res.json();
-        if(data&&data.rates&&data.rates[r.to]!=null){
-          const rate=data.rates[r.to];
-          const result=r.amount*rate;
-          const out=result.toLocaleString('de-DE',{maximumFractionDigits:6});
-          displayResult({
-            v:r.amount+' '+r.from+' = '+out+' '+r.to,
-            plain:String(result),t:'Währung',formula:r.amount+' '+r.from+' → '+r.to,
-            pods:[
-              {title:'Result',body:out+' '+r.to},
-              {title:'Rate',body:'1 '+r.from+' = '+rate+' '+r.to},
-              {title:'Source',body:'open.er-api.com · '+((data.time_last_update_utc)||'live')}
-            ]
-          },q.value);
-        }else{
-          displayResult({v:'Kurs nicht gefunden für '+r.from+'→'+r.to,t:'Währung',formula:r.formula},q.value);
-        }
+        if(!isFinite(r.amount)) throw new Error('Ungültiger Betrag.');
+        const {rate,src,date}=await fxRate(r.from,r.to);
+        const res=new Decimal(r.amount).times(rate);
+        const out=res.toDecimalPlaces(6).toNumber().toLocaleString('de-DE',{maximumFractionDigits:6});
+        displayResult({v:r.amount+' '+r.from+' = '+out+' '+r.to,plain:res.toFixed(),t:'Währung',formula:r.amount+' '+r.from+' → '+r.to,
+          pods:[{title:'Ergebnis',body:out+' '+r.to},{title:'Kurs',body:'1 '+r.from+' = '+rate+' '+r.to},{title:'Quelle',body:src+(date?' · '+date:'')}]},q.value);
       }else if(r.async==='numberfact'){
-        const res=await fetch('https://numbersapi.com/'+encodeURIComponent(r.n)+'/trivia?json');
-        const data=await res.json();
-        const text=data.text||data.found===false?'Kein Fakt zu '+r.n:data.text;
-        displayResult({
-          v:text,plain:text,t:'Zahlen-Fakt',formula:'fact '+r.n,
-          pods:[{title:'Number',body:String(r.n)},{title:'Trivia',body:text}]
-        },q.value);
+        if(r.n.length>300) throw new Error('Zahl zu groß (max. 300 Stellen).');
+        const F=numberFacts(r.n);
+        displayResult({v:F.map(f=>f[0]+': '+f[1]).join('\n'),plain:F.map(f=>f[0]+': '+f[1]).join('\n'),t:'Zahlen-Fakt',formula:'fact '+r.n,
+          pods:F.map(f=>({title:f[0],body:f[1]}))},q.value);
       }else if(r.async==='country'){
-        const res=await fetch('https://restcountries.com/v3.1/name/'+encodeURIComponent(r.name)+'?fields=name,capital,population,area,region,currencies,languages,flags');
-        if(!res.ok) throw new Error('Land nicht gefunden');
-        const data=(await res.json())[0];
-        const capital=(data.capital&&data.capital[0])||'—';
-        const curr=data.currencies?Object.keys(data.currencies).join(', '):'—';
-        const lang=data.languages?Object.values(data.languages).join(', '):'—';
-        const lines=[
-          data.name.common+(data.name.official?' ('+data.name.official+')':''),
-          'Capital: '+capital,
-          'Region: '+data.region,
-          'Population: '+(data.population||0).toLocaleString('de-DE'),
-          'Area: '+(data.area||0).toLocaleString('de-DE')+' km²',
-          'Currency: '+curr,
-          'Languages: '+lang
-        ].join('\n');
-        displayResult({
-          v:lines,plain:lines,t:'Land',formula:data.name.common,
-          pods:[
-            {title:'Capital',body:capital},
-            {title:'Population',body:(data.population||0).toLocaleString('de-DE')},
-            {title:'Currencies',body:curr}
-          ]
-        },q.value);
+        const F='?fields=name,capital,population,area,region,subregion,currencies,languages,flag,timezones',nm=encodeURIComponent(r.name),B='https://restcountries.com/v3.1/';
+        let list=await apiJSON(B+'name/'+nm+F+'&fullText=true',{ttl:TTL.country});
+        if(!list) list=await apiJSON(B+'translation/'+nm+F,{ttl:TTL.country});
+        if(!list) list=await apiJSON(B+'name/'+nm+F,{ttl:TTL.country});
+        if(!list||!list.length) throw new Error('Land „'+r.name+'“ nicht gefunden.');
+        const low=r.name.toLowerCase();
+        const c=list.find(x=>x.name.common.toLowerCase()===low)||[...list].sort((a,b)=>(b.population||0)-(a.population||0))[0];
+        const capital=(c.capital&&c.capital.join(', '))||'—';
+        const curr=c.currencies?Object.entries(c.currencies).map(([k,v])=>k+' · '+v.name+(v.symbol?' ('+v.symbol+')':'')).join('\n'):'—';
+        const lang=c.languages?Object.values(c.languages).join(', '):'—';
+        const nf=x=>(x||0).toLocaleString('de-DE');
+        const lines=[(c.flag||'')+' '+c.name.common+(c.name.official?' ('+c.name.official+')':''),'Hauptstadt: '+capital,
+          'Region: '+c.region+(c.subregion?' · '+c.subregion:''),'Einwohner: '+nf(c.population),'Fläche: '+nf(c.area)+' km²',
+          'Währung: '+curr.replace(/\n/g,'; '),'Sprachen: '+lang,'Zeitzonen: '+(c.timezones||[]).slice(0,4).join(', ')+((c.timezones||[]).length>4?' …':'')].join('\n');
+        displayResult({v:lines,plain:lines,t:'Land',formula:c.name.common,
+          pods:[{title:'Hauptstadt',body:capital},{title:'Einwohner',body:nf(c.population)},{title:'Währung',body:curr},{title:'Sprachen',body:lang}]},q.value);
       }else if(r.async==='weather'){
-        // geocode via open-meteo
-        const geo=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(r.place)+'&count=1&language=de');
-        const geoData=await geo.json();
-        if(!geoData.results||!geoData.results.length) throw new Error('Ort nicht gefunden');
-        const place=geoData.results[0];
-        const wres=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+place.latitude+'&longitude='+place.longitude+'&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m');
-        const w=await wres.json();
-        const c=w.current||{};
-        const codes={0:'Klar',1:'Überwiegend klar',2:'Teilweise bewölkt',3:'Bewölkt',45:'Nebel',61:'Regen',63:'Regen',65:'Starkregen',71:'Schnee',80:'Schauer',95:'Gewitter'};
-        const desc=codes[c.weather_code]||('Code '+c.weather_code);
-        const lines=[
-          place.name+(place.country?', '+place.country:''),
-          desc,
-          'Temperatur: '+c.temperature_2m+' °C',
-          'Luftfeuchtigkeit: '+c.relative_humidity_2m+' %',
-          'Wind: '+c.wind_speed_10m+' km/h'
-        ].join('\n');
-        displayResult({
-          v:lines,plain:lines,t:'Wetter',formula:'weather '+place.name,
-          pods:[
-            {title:'Temperature',body:c.temperature_2m+' °C'},
-            {title:'Conditions',body:desc},
-            {title:'Wind',body:c.wind_speed_10m+' km/h'}
-          ]
-        },q.value);
+        const geo=await apiJSON('https://geocoding-api.open-meteo.com/v1/search?count=1&language=de&format=json&name='+encodeURIComponent(r.place),{ttl:TTL.weather*6});
+        if(!geo||!geo.results||!geo.results.length) throw new Error('Ort „'+r.place+'“ nicht gefunden.');
+        const p=geo.results[0];
+        const w=await apiJSON('https://api.open-meteo.com/v1/forecast?latitude='+p.latitude+'&longitude='+p.longitude+
+          '&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m'+
+          '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=3&timezone=auto',{ttl:TTL.weather});
+        const c=w&&w.current;
+        if(!c) throw new Error('Keine Wetterdaten erhalten.');
+        const desc=WMO[c.weather_code]||('Code '+c.weather_code),d=w.daily||{};
+        const day=i=>{const dt=new Date(d.time[i]+'T12:00').toLocaleDateString('de-DE',{weekday:'short'});
+          return dt+': '+(WMO[d.weather_code[i]]||'—')+', '+Math.round(d.temperature_2m_min[i])+'…'+Math.round(d.temperature_2m_max[i])+' °C, Regen '+(d.precipitation_probability_max[i]==null?'—':d.precipitation_probability_max[i]+' %');};
+        const fc=d.time?[0,1,2].map(day).join('\n'):'';
+        const lines=[p.name+(p.admin1?', '+p.admin1:'')+(p.country?', '+p.country:''),desc,'Temperatur: '+c.temperature_2m+' °C (gefühlt '+c.apparent_temperature+' °C)',
+          'Luftfeuchtigkeit: '+c.relative_humidity_2m+' %','Wind: '+c.wind_speed_10m+' km/h','Niederschlag: '+c.precipitation+' mm'].join('\n')+(fc?'\n\n'+fc:'');
+        displayResult({v:lines,plain:lines,t:'Wetter',formula:'weather '+p.name,
+          pods:[{title:'Temperatur',body:c.temperature_2m+' °C (gefühlt '+c.apparent_temperature+' °C)'},{title:'Wetter',body:desc},{title:'Wind',body:c.wind_speed_10m+' km/h'}].concat(fc?[{title:'3-Tage-Vorschau',body:fc}]:[])},q.value);
       }
     }catch(e){
-      displayResult({v:'Fehler: '+(e.message||e)+'\n(APIs brauchen Internet.)',t:'Fehler',formula:r.formula},q.value);
+      displayResult({v:'Fehler: '+(e.message||e),t:'Fehler',formula:r.formula},q.value);
     }
     status.textContent='Fertig';
     status.classList.remove('is-busy');
