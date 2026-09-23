@@ -594,6 +594,47 @@ html.pf-dark,:root.pf-dark{--bg:#141210;--s:#1c1a17;--s2:#2a2723;--t:#f3efe6;--m
 @media(max-width:820px){.lvx-logo-lg{width:clamp(200px,58vw,280px)}.pf-clean-hero{padding-top:clamp(12vh,17vh,20vh)!important}.pf-clean-hero .pf-command-wrap .pf-go{min-width:72px;padding:0 20px}}
 @media(prefers-reduced-motion:reduce){.lvx-logo-lg,.lvx-logo-mark{animation:none}}
 </style>
+<style id="luvox-claude-loader">
+.lvx-loader{min-height:140px;padding:18px 0 26px}
+.lvx-loader-core{width:auto;height:auto;display:flex;flex-direction:column;align-items:center;gap:16px}
+.lvx-loader .lvx-logo-mark{width:54px;position:relative;background:var(--accent);animation:lvxBreathe 2.2s cubic-bezier(.45,0,.55,1) infinite;transform-origin:50% 60%}
+.lvx-loader .lvx-logo-mark::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.75) 50%,transparent 70%);background-size:250% 100%;background-position:150% 0;animation:lvxSheen 2.2s ease-in-out infinite;mix-blend-mode:soft-light}
+@keyframes lvxBreathe{0%,100%{transform:scale(.9) rotate(-3deg);opacity:.7}50%{transform:scale(1.08) rotate(3deg);opacity:1}}
+@keyframes lvxSheen{0%{background-position:150% 0}60%,100%{background-position:-50% 0}}
+.lvx-think{font-size:13px;font-weight:550;letter-spacing:-.01em;color:transparent;background:linear-gradient(90deg,var(--m) 35%,var(--accent) 50%,var(--m) 65%) 200% 0/250% 100%;-webkit-background-clip:text;background-clip:text;animation:lvxShimmer 1.8s linear infinite}
+@keyframes lvxShimmer{to{background-position:-50% 0}}
+@media(prefers-reduced-motion:reduce){.lvx-loader .lvx-logo-mark,.lvx-loader .lvx-logo-mark::after,.lvx-think{animation:none}.lvx-think{color:var(--m);background:none}}
+</style>
+<style id="luvox-smart">
+.pf-results.has-info #pfQuickResult,.pf-results.has-info #pfFormula,.pf-results.has-info #pfQuickNote{display:none}
+.lvx-i svg{width:1.1em;height:1.1em;vertical-align:-.2em}.pf-v-icon svg,.pf-ac-ico svg,.h-ico svg{width:18px;height:18px}
+.pf-v-country-flag{font:700 13px/1 ui-monospace,Menlo,monospace!important;letter-spacing:.06em;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--accent-soft);color:var(--accent)}
+.lvx-info{animation:pfFadeIn .3s ease}
+.lvx-i-head{display:flex;align-items:center;gap:14px}
+.lvx-i-ico{width:46px;height:46px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:0 0 auto}
+.lvx-i-head b{display:block;font-size:clamp(20px,3.4vw,27px);letter-spacing:-.03em;line-height:1.15;overflow-wrap:anywhere}
+.lvx-i-head small{display:block;color:var(--m);font-size:12.5px;margin-top:3px}
+.lvx-i-head em{margin-left:auto;font-style:normal;font-size:11px;font-weight:650;color:var(--accent);background:var(--accent-soft);padding:5px 12px;border-radius:999px;white-space:nowrap}
+.lvx-i-hero{margin:18px 0 0;padding:16px 18px;border-radius:20px;background:var(--s2);font-size:clamp(16px,2.4vw,19px);font-weight:560;line-height:1.45;letter-spacing:-.01em}
+.lvx-i-text{margin:14px 2px 0;color:var(--m);line-height:1.65;font-size:14.5px}
+.lvx-i-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px 0 0}
+.lvx-i-facts div{background:var(--s2);border-radius:18px;padding:12px 14px;min-width:0}
+.lvx-i-facts dt{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--m);font-weight:650}
+.lvx-i-facts dd{margin:5px 0 0;font-size:14.5px;font-weight:600;overflow-wrap:anywhere;font-family:inherit}
+.lvx-i-list{margin:16px 0 0;padding:0;list-style:none;display:grid;gap:8px;counter-reset:s}
+.lvx-i-list li{position:relative;padding:11px 14px 11px 40px;border-radius:16px;background:var(--s2);font-size:14px;line-height:1.5}
+.lvx-i-list li::before{content:"";position:absolute;left:16px;top:19px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.lvx-i-steps li{counter-increment:s}.lvx-i-steps li::before{content:counter(s);top:10px;left:11px;width:22px;height:22px;display:grid;place-items:center;font-size:11px;font-weight:700;color:#faf8f4}
+.lvx-i-tw{margin-top:16px;overflow-x:auto;border-radius:18px;border:1px solid var(--l)}
+.lvx-i-tw table{width:100%;border-collapse:collapse;font-size:13.5px}.lvx-i-tw th{background:var(--s2);text-align:left;padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--m)}
+.lvx-i-tw td{padding:10px 14px;border-top:1px solid var(--l)}
+.lvx-i-rel{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.lvx-i-rel button,.pf-smart-chip{border:1px solid var(--l);background:var(--s);color:var(--m);border-radius:999px;padding:8px 15px;font-size:12.5px;cursor:pointer;transition:.15s}
+.lvx-i-rel button:hover,.pf-smart-chip:hover{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-mid)}
+.pf-clean-hero .pf-command-smart{display:flex!important;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:16px}.pf-command-smart:empty{display:none!important}
+.pf-clean-hero .pf-command-meta{display:flex!important;justify-content:center;margin:0 0 12px}.pf-command-shell[data-intent="empty"] .pf-command-meta{display:none!important}
+.pf-command-intent{padding:5px 13px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:11px;font-weight:650}
+</style>
 </head>
 <body>
 <div class="pf-shell">
@@ -623,7 +664,7 @@ html.pf-dark,:root.pf-dark{--bg:#141210;--s:#1c1a17;--s2:#2a2723;--t:#f3efe6;--m
     <div class="pf-command-meta"><span class="pf-command-intent" id="pfIntent">Alles verstehen · automatisch erkennen</span></div>
     <div class="pf-command-wrap"><div class="pf-search-wrap"><div class="pf-search">
       <div class="pf-search-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.6-4.6"/></svg></div>
-      <input id="pfQuickInput" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="pfAc" aria-expanded="false" placeholder="Was möchtest du wissen?">
+      <input id="pfQuickInput" enterkeyhint="search" autocapitalize="off"  autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="pfAc" aria-expanded="false" placeholder="Was möchtest du wissen?">
       <button class="pf-go" id="pfQuickGo" type="button">Los</button>
     </div><div class="pf-ac" id="pfAc" role="listbox" hidden></div></div></div>
     <div class="pf-command-smart" id="pfSmartRail" aria-label="Smart suggestions"></div>
@@ -642,7 +683,7 @@ html.pf-dark,:root.pf-dark{--bg:#141210;--s:#1c1a17;--s2:#2a2723;--t:#f3efe6;--m
 <div class="lvx-loader" id="lvxLoader" aria-hidden="true">
   <div class="lvx-loader-core">
     <span class="lvx-logo lvx-logo-mark" aria-hidden="true"></span>
-    <div class="lvx-dots"><i></i><i></i><i></i></div>
+    <span class="lvx-think">Luvox denkt nach…</span>
   </div>
 </div>
 <section class="pf-results">
@@ -926,7 +967,7 @@ function isPrimeBig(n){if(n<2n)return false;if(n<4n)return true;if(n%2n===0n)ret
 function divisorsBig(n){let a=[],s=bigIntSqrt(n);for(let i=1n;i<=s;i++)if(n%i===0n){a.push(i);if(i!==n/i)a.push(n/i)}return a.sort((a,b)=>a<b?-1:a>b?1:0)}
 function primeFactorsBig(n){let a=[],x=n,d=2n;while(d*d<=x){let c=0;while(x%d===0n){x/=d;c++}if(c)a.push([d,c]);d+=d===2n?1n:2n}if(x>1n)a.push([x,1]);return a}
 function gcdBig(a,b){a=a<0n?-a:a;b=b<0n?-b:b;while(b)[a,b]=[b,a%b];return a}function lcmBig(a,b){if(!a||!b)return 0n;let r=a/gcdBig(a,b)*b;return r<0n?-r:r}
-function zahlentheorie(op){showError('error-nt','');try{let ra=document.getElementById('nt-a').value.trim(),rb=document.getElementById('nt-b').value.trim();if(!/^-?\d+$/.test(ra))throw Error('Zahl A muss eine Ganzzahl sein.');let a=BigInt(ra),r='',abs=a<0n?-a:a;switch(op){case'prim':r=abs+' ist '+(isPrimeBig(abs)?'eine Primzahl ✅':'keine Primzahl ❌');break;case'teiler':if(abs>10n**15n)throw Error('Zahl zu groß für Teilersuche.');r='Teiler von '+abs+' ('+divisorsBig(abs).length+' Stück):\\n'+divisorsBig(abs).join(', ');break;case'primfaktoren':if(abs>10n**15n)throw Error('Zahl zu groß für Primfaktorzerlegung.');r=abs+' = '+primeFactorsBig(abs).map(([p,c])=>c>1?p+'^'+c:p).join(' × ');break;case'ggt':case'kgv':if(!/^-?\d+$/.test(rb))throw Error('Zahl B muss eine Ganzzahl sein.');let b=BigInt(rb);r=op==='ggt'?'ggT('+a+', '+b+') = '+gcdBig(a,b):'kgV('+a+', '+b+') = '+lcmBig(a,b)}document.getElementById('nt-output').value=r}catch(e){showError('error-nt',e.message)}}
+function zahlentheorie(op){showError('error-nt','');try{let ra=document.getElementById('nt-a').value.trim(),rb=document.getElementById('nt-b').value.trim();if(!/^-?\d+$/.test(ra))throw Error('Zahl A muss eine Ganzzahl sein.');let a=BigInt(ra),r='',abs=a<0n?-a:a;switch(op){case'prim':r=abs+' ist '+(isPrimeBig(abs)?'eine Primzahl':'keine Primzahl');break;case'teiler':if(abs>10n**15n)throw Error('Zahl zu groß für Teilersuche.');r='Teiler von '+abs+' ('+divisorsBig(abs).length+' Stück):\\n'+divisorsBig(abs).join(', ');break;case'primfaktoren':if(abs>10n**15n)throw Error('Zahl zu groß für Primfaktorzerlegung.');r=abs+' = '+primeFactorsBig(abs).map(([p,c])=>c>1?p+'^'+c:p).join(' × ');break;case'ggt':case'kgv':if(!/^-?\d+$/.test(rb))throw Error('Zahl B muss eine Ganzzahl sein.');let b=BigInt(rb);r=op==='ggt'?'ggT('+a+', '+b+') = '+gcdBig(a,b):'kgV('+a+', '+b+') = '+lcmBig(a,b)}document.getElementById('nt-output').value=r}catch(e){showError('error-nt',e.message)}}
 function berechneTrig(){showError('error-trig','');try{let d=Math.min(5000000,+document.getElementById('trig-dec').value||50),f=document.getElementById('trig-func').value,u=document.getElementById('trig-unit').value;Decimal.set({precision:d+40});let x=new Decimal(document.getElementById('trig-value').value.replace(',','.')),inv=['asin','acos','atan'].includes(f),hyp=f.endsWith('h');if(!inv&&!hyp&&u==='deg')x=x.times(Decimal.acos(-1)).div(180);let r=Decimal[f](x);if(inv&&u==='deg')r=r.times(180).div(Decimal.acos(-1));document.getElementById('trig-output').value=r.toFixed(d)}catch(e){showError('error-trig',e.message)}}
 function berechneStatistik(){showError('error-stat','');try{let d=Math.min(5000000,+document.getElementById('stat-dec').value||20);Decimal.set({precision:d+40});let raw=document.getElementById('stat-values').value.split(/[,\\n]+/).map(x=>x.trim()).filter(Boolean),v=raw.map(x=>new Decimal(x.replace(',','.')));if(!v.length)throw Error('Bitte mindestens einen Wert eingeben.');let n=v.length,sum=v.reduce((a,x)=>a.plus(x),new Decimal(0)),mean=sum.div(n),s=[...v].sort((a,b)=>a.cmp(b)),med=n%2?s[(n-1)/2]:s[n/2-1].plus(s[n/2]).div(2),varx=v.reduce((a,x)=>a.plus(x.minus(mean).pow(2)),new Decimal(0)).div(n);document.getElementById('stat-output').value='n = '+n+'\\nSumme = '+sum.toFixed(d)+'\\nMittelwert = '+mean.toFixed(d)+'\\nMedian = '+med.toFixed(d)+'\\nVarianz = '+varx.toFixed(d)+'\\nStandardabweichung = '+varx.sqrt().toFixed(d)+'\\nMinimum = '+s[0].toFixed(d)+'\\nMaximum = '+s[n-1].toFixed(d)}catch(e){showError('error-stat',e.message)}}
 function berechneKombinatorik(op){showError('error-comb','');try{let n=+document.getElementById('comb-n').value,r=+document.getElementById('comb-r').value;if(!Number.isInteger(n)||!Number.isInteger(r)||n<0||r<0||r>n||n>5000)throw Error('Ungültige Werte oder n > 5000.');let z=1n;if(op==='ncr'){r=Math.min(r,n-r);for(let i=1;i<=r;i++)z=z*BigInt(n-r+i)/BigInt(i)}else for(let i=0;i<r;i++)z*=BigInt(n-i);document.getElementById('comb-output').value=(op==='ncr'?'C':'P')+'('+n+','+r+') = '+z}
@@ -1464,7 +1505,7 @@ document.getElementById('number').onkeydown=e=>{if(e.key==='Enter')berechneWurze
         const n=BigInt(m[1]);
         const abs=n<0n?-n:n;
         const ok=isPrimeQuick(abs);
-        return {v:abs+' ist '+(ok?'eine Primzahl ✅':'keine Primzahl ❌'),t:'Primzahl-Check',module:'zahlentheorie',fill:{nta:String(abs)},formula:'isprime('+abs+')'};
+        return {v:abs+' ist '+(ok?'eine Primzahl':'keine Primzahl'),t:'Primzahl-Check',module:'zahlentheorie',fill:{nta:String(abs)},formula:'isprime('+abs+')'};
       }
 
       // factorial: 5! or factorial(5)
@@ -1629,7 +1670,7 @@ document.getElementById('number').onkeydown=e=>{if(e.key==='Enter')berechneWurze
       }
 
       // general expression with + - * / ^ ( )
-      if(/[+\-*/^()]/.test(s)||/pi|π|e/i.test(s)){
+      if(isMathLike(s)){
         const dig=safeDigits(currentDigits||PREVIEW_DIGITS);
         let v,val,extra=null,pods;
         try{
@@ -2116,7 +2157,7 @@ document.getElementById('number').onkeydown=e=>{if(e.key==='Enter')berechneWurze
         },q.value);
       }
     }catch(e){
-      displayResult({v:'Fehler: '+(e.message||e)+'\n(APIs brauchen Internet.)',t:'Fehler',formula:r.formula},q.value);
+      await luvoxFail(r,e);
     }
     status.textContent='Fertig';
     status.classList.remove('is-busy');
@@ -2627,6 +2668,123 @@ document.getElementById('number').onkeydown=e=>{if(e.key==='Enter')berechneWurze
 
   // Make textarea accept multiline for batch (Shift+Enter already works in input? use placeholder tip)
   // Expand input height on multiline paste is limited; support via paste of newlines in calc already
+
+
+  /* ===== Luvox smart layer ===== */
+  const IC={sigma:'M18 7V5H6l6 7-6 7h12v-2',spark:'M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z',cloud:'M7 18a4 4 0 0 1-.6-7.96A6 6 0 0 1 18 9.5 4.3 4.3 0 0 1 17.5 18z',sun:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',csun:'M8.5 19a3.5 3.5 0 0 1-.5-6.96A5 5 0 0 1 17.6 13 3 3 0 0 1 17 19zM12 3v2M5.6 5.6 7 7M18.4 5.6 17 7',rain:'M7 15a4 4 0 0 1-.6-7.96A6 6 0 0 1 18 6.5 4.3 4.3 0 0 1 17.5 15zM8 18l-1 2M12 18l-1 2M16 18l-1 2',snow:'M12 2v20M4.2 7l15.6 10M4.2 17 19.8 7',bolt:'M13 2 4 14h7l-1 8 9-12h-7z',globe:'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20',book:'M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5zM6.5 17v4H20',check:'M5 12.5l4.5 4.5L19 7.5',x:'M6 6l12 12M18 6 6 18',swap:'M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7',gear:'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1',arrow:'M7 17 17 7M8 7h9v9',undo:'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5',euro:'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM15 9.2a3.5 3.5 0 1 0 0 5.6M8 11h5M8 13h5',hash:'M5 9h14M5 15h14M10 4 8 20M16 4l-2 16',user:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',pin:'M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zM12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'};
+  function svg(n,sz){return '<svg viewBox="0 0 24 24" width="'+(sz||18)+'" height="'+(sz||18)+'" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(IC[n]||IC.spark)+'"/></svg>'}
+  const EM={'∑':'sigma','✦':'spark','☁':'cloud','☀':'sun','⛅':'csun','⛈':'bolt','⚡':'bolt','❄':'snow','🌧':'rain','🌍':'globe','🌐':'globe','📖':'book','📚':'book','✅':'check','❌':'x','✓':'check','✕':'x','⇄':'swap','↔':'swap','⚙':'gear','↗':'arrow','↺':'undo','€':'euro','#':'hash','123':'hash','?':'spark'};
+  const RX1=/[☁☀⛅⛈⚡❄🌧🌍🌐📖📚✅❌✓✦⚙⇄↔↗↺]/u,RXG=/[☁☀⛅⛈⚡❄🌧🌍🌐📖📚✅❌✓✦⚙⇄↔↗↺]\uFE0F?/gu,BOX='.pf-v-icon,.pf-ac-ico,.h-ico,.pf-empty-ico,.pf-logo-x';
+  function swap(root){
+    const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),ns=[];while(w.nextNode())ns.push(w.currentNode);
+    ns.forEach(n=>{const p=n.parentElement;if(!p||/^(SCRIPT|STYLE|TEXTAREA|INPUT|OPTION)$/.test(p.tagName))return;
+      const t=n.data,k=t.trim().replace(/\uFE0F/g,'');
+      if(p.matches(BOX)&&EM[k]){p.innerHTML=svg(EM[k],18);return}
+      if(!RX1.test(t))return;
+      const f=document.createDocumentFragment();let last=0,m;RXG.lastIndex=0;
+      while((m=RXG.exec(t))){f.append(t.slice(last,m.index));const e=document.createElement('span');e.className='lvx-i';e.innerHTML=svg(EM[m[0].replace('\uFE0F','')],'1.1em');f.append(e);last=RXG.lastIndex}
+      f.append(t.slice(last));n.replaceWith(f)});
+  }
+  flagEmoji=c=>(c&&c.length===2?c.toUpperCase():'··');
+  new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)swap(n);else if(n.nodeType===3&&n.parentElement)swap(n.parentElement)}))).observe(document.body,{childList:true,subtree:true});
+  swap(document.body);
+
+  /* robust math */
+  function isMathLike(s){const t=s.replace(/(\d)e([+-]?\d)/gi,'$1$2').replace(/(?<![a-zπ])(?:sqrt|cbrt|sin|cos|tan|ln|log|exp|abs|pi|e)(?![a-z])|π|√/gi,'#');return /^[\d\s.,+\-*/^()!%×÷·²³#]+$/.test(t)&&/[\d#]/.test(t)&&/[+\-*/^()!%×÷·²³#]/.test(t)}
+  evalExpr=function(str){
+    const s=String(str).replace(/×|·/g,'*').replace(/÷/g,'/').replace(/²/g,'^2').replace(/³/g,'^3').replace(/√/g,'sqrt').replace(/\s+/g,'').replace(/,/g,'.');
+    if(!s)throw new Error('Leerer Ausdruck');
+    let i=0;const D=Decimal,F={sqrt:x=>x.sqrt(),cbrt:x=>x.cbrt(),ln:x=>x.ln(),log:x=>x.log(10),exp:x=>x.exp(),abs:x=>x.abs(),sin:x=>x.sin(),cos:x=>x.cos(),tan:x=>x.tan()};
+    function expr(){let v=term();while(s[i]==='+'||s[i]==='-'){const o=s[i++],r=term();v=o==='+'?v.plus(r):v.minus(r)}return v}
+    function term(){let v=unary();for(;;){const c=s[i];if(c==='*'||c==='/'){i++;const r=unary();v=c==='*'?v.times(r):v.div(r)}else if(c&&/[\d.(a-zπ]/i.test(c))v=v.times(unary());else return v}}
+    function unary(){if(s[i]==='-'){i++;return unary().neg()}if(s[i]==='+'){i++;return unary()}return pw()}
+    function pw(){const b=post();if(s[i]==='^'){i++;return b.pow(unary())}return b}
+    function post(){let v=atom();for(;;){if(s[i]==='!'){i++;if(!v.isInt()||v.gt(500)||v.lt(0))throw new Error('Fakultät nur für ganze Zahlen von 0 bis 500');let r=new D(1);for(let k=2;k<=v.toNumber();k++)r=r.times(k);v=r}else if(s[i]==='%'){i++;v=v.div(100)}else return v}}
+    function atom(){const rest=s.slice(i);let m;
+      if((m=rest.match(/^(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?/i))){i+=m[0].length;return new D(m[0])}
+      if(s[i]==='('){i++;const v=expr();if(s[i]!==')')throw new Error('Klammer fehlt');i++;return v}
+      if((m=rest.match(/^[a-zπ]+/i))){const n=m[0].toLowerCase();
+        if(n==='π'||n==='pi'){i+=m[0].length;return D.acos(-1)}
+        if(n==='e'){i++;return D.exp(1)}
+        if(F[n]){i+=n.length;return F[n](s[i]==='('?atom():pw())}
+        throw new Error('„'+m[0]+'“ ist keine Rechenangabe')}
+      throw new Error(i>=s.length?'Ausdruck unvollständig':'Unerwartetes Zeichen „'+s[i]+'“')}
+    const v=expr();if(i<s.length)throw new Error('Unerwartetes Zeichen „'+s[i]+'“');return v};
+
+  /* info cards */
+  const KL={definition:'Definition',person:'Person',place:'Ort',country:'Land',concept:'Konzept',howto:'Anleitung',compare:'Vergleich',translation:'Übersetzung',fact:'Fakt',list:'Liste',answer:'Antwort'};
+  const KI={definition:'book',person:'user',place:'pin',country:'globe',concept:'spark',howto:'list',compare:'swap',translation:'globe',fact:'hash',list:'list',answer:'spark'};
+  function infoHTML(i){const e=esc;let h='<div class="lvx-info"><div class="lvx-i-head"><span class="lvx-i-ico">'+svg(i.icon||'spark',22)+'</span><div><b>'+e(i.title)+'</b>'+(i.subtitle?'<small>'+e(i.subtitle)+'</small>':'')+'</div>'+(i.badge?'<em>'+e(i.badge)+'</em>':'')+'</div>';
+    if(i.hero)h+='<div class="lvx-i-hero">'+e(i.hero)+'</div>';
+    if(i.text)h+='<p class="lvx-i-text">'+e(i.text)+'</p>';
+    if(i.facts&&i.facts.length)h+='<dl class="lvx-i-facts">'+i.facts.map(f=>'<div><dt>'+e(f[0])+'</dt><dd>'+e(f[1])+'</dd></div>').join('')+'</dl>';
+    if(i.points&&i.points.length)h+='<ul class="lvx-i-list">'+i.points.map(p=>'<li>'+e(p)+'</li>').join('')+'</ul>';
+    if(i.steps&&i.steps.length)h+='<ol class="lvx-i-list lvx-i-steps">'+i.steps.map(p=>'<li>'+e(p)+'</li>').join('')+'</ol>';
+    if(i.table&&i.table.rows)h+='<div class="lvx-i-tw"><table><thead><tr>'+(i.table.cols||[]).map(c=>'<th>'+e(c)+'</th>').join('')+'</tr></thead><tbody>'+i.table.rows.map(r=>'<tr>'+r.map(c=>'<td>'+e(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+    if(i.related&&i.related.length)h+='<div class="lvx-i-rel">'+i.related.map(x=>'<button type="button" data-q="'+e(x)+'">'+e(x)+'</button>').join('')+'</div>';
+    return h+'</div>'}
+  const _rv=renderVisual;
+  renderVisual=function(r){const el=document.getElementById('pfVisualResult'),res=document.querySelector('.pf-results');
+    if(el&&r&&r.info){res&&res.classList.add('has-info');el.innerHTML=infoHTML(r.info);el.classList.add('is-on');el.querySelectorAll('[data-q]').forEach(b=>b.addEventListener('click',()=>{q.value=b.dataset.q;run(false)}));return}
+    res&&res.classList.remove('has-info');return _rv(r)};
+
+  function numInfo(s){const n=BigInt(s),N=Number(s);let f=[],x=N;const ok=N>1&&N<=9e13;
+    if(ok){for(let p=2;p*p<=x;p+=p===2?1:2)while(x%p===0){f.push(p);x/=p}if(x>1)f.push(x)}
+    const u=[...new Set(f)],cnt=p=>f.filter(y=>y===p).length,prime=ok&&f.length===1;
+    const fac=ok&&!prime?u.map(p=>p+(cnt(p)>1?'^'+cnt(p):'')).join(' × '):'—',divs=ok?u.reduce((a,p)=>a*(cnt(p)+1),1):N===1?1:'—';
+    let roman='—';if(N>0&&N<4000){roman='';let k=N;[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']].forEach(([a,b])=>{while(k>=a){roman+=b;k-=a}})}
+    const sq=Number.isInteger(Math.sqrt(N)),cb=Math.round(Math.cbrt(N))**3===N;
+    const props=[N%2?'ungerade':'gerade',sq?'Quadratzahl':'',cb?'Kubikzahl':''].filter(Boolean).join(', ');
+    const rel=['sqrt('+s+')'];if(N<=170)rel.push(s+'!');rel.push('fact about '+s);
+    return {v:s+(prime?' ist eine Primzahl':' ist keine Primzahl'),t:'Zahl',formula:s,info:{icon:'hash',title:N.toLocaleString('de-DE'),subtitle:'Zahlenanalyse',badge:prime?'Primzahl':(N>1?'zusammengesetzt':''),facts:[['Primfaktoren',fac],['Anzahl Teiler',String(divs)],['Binär',n.toString(2)],['Oktal',n.toString(8)],['Hexadezimal',n.toString(16).toUpperCase()],['Römisch',roman],['Quersumme',String([...s].reduce((a,c)=>a+ +c,0))],['Eigenschaften',props]],related:rel}}}
+
+  /* smarter routing */
+  const _calc=calc;
+  calc=function(raw){const s=(raw||'').trim();let m;
+    if(s&&!/\n/.test(s)){
+      if(/^\d{1,15}$/.test(s))return numInfo(s);
+      if((m=s.match(/^(?:wie sagt man|how do you say)\s+(.+?)\s+(?:auf|in)\s+([a-zäöü]+)\??$/i))||(!/\d/.test(s)&&(m=s.match(/^(.+?)\s+(?:auf|in|to)\s+(englisch|deutsch|französisch|spanisch|italienisch|english|german|french|spanish|italian)$/i))))
+        return {v:null,t:'Übersetzung',async:'smart',query:'Übersetze „'+m[1]+'“ ins '+m[2]+'. kind=translation',formula:s};
+    }
+    const r=_calc(raw);if(r||!s)return r;
+    return {v:null,t:'Antwort',async:'smart',query:s,formula:s}};
+  const _ii=inferIntent;
+  inferIntent=function(raw){const s=(raw||'').trim().toLowerCase();
+    if(/^\d{1,15}$/.test(s))return 'number';
+    if(/\s(?:auf|in|to)\s(?:englisch|deutsch|französisch|spanisch|italienisch|english|german|french|spanish|italian)$/.test(s)||/^wie sagt man/.test(s))return 'translation';
+    if(/\b(?:vs\.?|versus|unterschied|compare)\b/.test(s)&&!/\d/.test(s))return 'compare';
+    if(/^(?:wie|how)\b/.test(s))return 'howto';
+    return _ii(raw)};
+  intentLabels.de.compare='Vergleich erkannt';intentLabels.de.howto='Anleitung erkannt';intentLabels.en.compare='Comparison detected';intentLabels.en.howto='How-to detected';
+
+  const getSample=async()=>{try{return window.claude&&claude.use?await claude.use('sample'):null}catch(_){return null}};
+  const _raq=runAsyncQuery;
+  runAsyncQuery=async function(r){
+    const smp=await getSample(),viaAI=r.async==='smart'||['translate','define','wiki','country','numberfact'].includes(r.async);
+    if(!viaAI)return _raq(r);
+    if(!smp)return _raq(r.async==='smart'?{async:'wiki',topic:r.query,t:'Wissen',formula:r.query}:r);
+    status.classList.add('is-busy');status.textContent='Denkt nach …';setLoader(true);
+    const query=r.query||({translate:'Übersetze „'+r.text+'“ ins '+r.lang+'. kind=translation',define:'Definiere: '+r.word+'. kind=definition',wiki:'Erkläre: '+r.topic,country:'Länderprofil: '+r.name+'. kind=country',numberfact:'Interessanter Fakt über die Zahl '+r.n+'. kind=fact'})[r.async];
+    try{
+      const P='Du bist die Antwort-Engine der Suchmaschine „Luvox“. Antworte NUR mit einem JSON-Objekt ohne Markdown, Sprache: '+(uiLang==='de'?'Deutsch':'English')+'. Wähle "kind" passend zur Anfrage: definition|person|place|country|concept|howto|compare|translation|fact|list|answer. Schema: {"kind":"","title":"","subtitle":"","hero":"direkte Antwort in einem Satz (bei Übersetzung die Übersetzung)","text":"2-4 Sätze","facts":[["Label","Wert"]],"points":[],"steps":[],"table":{"cols":[],"rows":[[]]},"related":[]}. facts (max 8) nur bei person/place/country/fact/definition; points (max 5) bei concept/list; steps nur bei howto; table nur bei compare; related = 3 kurze Folge-Suchanfragen. Nicht passende Felder weglassen. Nichts erfinden, Unsicherheit in "text" nennen.\nAnfrage: '+query.replace(/\. kind=\w+$/,'');
+      const o=await smp.json(P,{modelTier:'quick'}),k=KL[o.kind]?o.kind:'answer';
+      o.icon=KI[k];o.badge=KL[k];
+      displayResult({v:o.hero||o.text||o.title,plain:o.hero||o.text||'',t:KL[k],formula:r.formula||query,info:o},q.value);
+    }catch(e){
+      displayResult({v:'Keine Antwort',t:'Hinweis',formula:r.formula,info:{icon:'x',title:'Dazu habe ich gerade keine Antwort',text:(e&&e.code==='not_granted')?'Die Antwort-Funktion wurde nicht freigegeben.':'Bitte versuche es mit einer anderen Formulierung.',related:[]}},q.value)}
+    status.textContent='Fertig';status.classList.remove('is-busy');setLoader(false)};
+  async function luvoxFail(r,e){const smp=await getSample();
+    if(smp&&r.async==='fx'){try{const o=await smp.json('Nenne den ungefähren Wechselkurs '+r.from+' nach '+r.to+' aus deinem Wissen. Nur JSON: {"rate":Zahl,"asOf":"Zeitraum deines Wissensstands"}',{modelTier:'quick'});const res=r.amount*o.rate,out=res.toLocaleString('de-DE',{maximumFractionDigits:2});
+      return displayResult({v:out+' '+r.to,t:'Währung',formula:r.formula,info:{icon:'euro',title:r.amount+' '+r.from+' ≈ '+out+' '+r.to,subtitle:'Näherungswert · nicht live',hero:out+' '+r.to,facts:[['Kurs','1 '+r.from+' ≈ '+o.rate+' '+r.to],['Stand',o.asOf||'—'],['Hinweis','Live-Kurse sind hier nicht erreichbar']],related:['1 '+r.to+' to '+r.from]}},q.value)}catch(_){}}
+    displayResult({v:'Live-Daten nicht erreichbar',t:'Hinweis',formula:r.formula,info:{icon:r.async==='weather'?'cloud':'globe',title:'Live-Daten nicht erreichbar',text:'Diese Abfrage braucht eine Live-Datenquelle, die in dieser Umgebung gesperrt ist. Öffne Luvox als Datei im Browser oder versuche es später erneut.',related:[]}},q.value)}
+
+  /* Enter + fehlerfestes run */
+  const _run=run;
+  run=function(f){try{return _run(f)}catch(err){console.error(err);if(f)return;setLoader(false);status.textContent='Bereit';status.classList.remove('is-busy');displayResult({v:'Fehler',t:'Hinweis',formula:q.value,info:{icon:'x',title:'Das konnte ich nicht verarbeiten',text:String(err&&err.message||err),related:[]}},q.value)}};
+  q.addEventListener('keydown',e=>{
+    if(e.key!=='Enter'||e.isComposing||e.keyCode===229)return;
+    if(acEl&&acEl.classList.contains('is-open')&&acIndex>=0&&acItems[acIndex])return;
+    e.preventDefault();e.stopImmediatePropagation();clearTimeout(debounceTimer);acClose();q.blur&&0;run(false)},true);
 
   applyLanguage(uiLang);
 
