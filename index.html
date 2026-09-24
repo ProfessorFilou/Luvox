@@ -3422,6 +3422,139 @@ const pre=s=>s.toLowerCase().trim().replace(/[?？]+$/,'').replace(/^(?:wie ?vie
  .replace(/(?:quadratwurzel|square root|wurzel)\s*(?:aus|von|of)?\s*/g,'sqrt ').replace(/\b(?:mal|times)\b/g,'*').replace(/\b(?:geteilt durch|durch|divided by)\b/g,'/').replace(/\bplus\b/g,'+').replace(/\bminus\b/g,'-').replace(/\b(?:hoch|to the power of)\b/g,'^');
 
 
+/* ===== Wort-Engine v3: Wörterbuch (Wiktionary) + bessere Wikipedia-Suche + Wortzerlegung ===== */
+const jt=(u,ms=8000)=>{const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);return fetch(u,{signal:c.signal}).then(r=>{if(!r.ok)throw 0;return r.json()}).finally(()=>clearTimeout(t))};
+const cap=w=>w.charAt(0).toUpperCase()+w.slice(1);
+const norm=w=>String(w||'').toLowerCase().replace(/ß/g,'ss').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+const wtxt=h=>{try{return(new DOMParser().parseFromString(String(h||''),'text/html').body.textContent||'').replace(/\s+/g,' ').trim()}catch(_){return String(h||'').replace(/<[^>]+>/g,'').trim()}};
+const wclean=s=>String(s||'')
+  .replace(/<ref[^>]*>[\s\S]*?<\/ref>|<ref[^>]*\/>/g,'')
+  .replace(/\{\{K\|([^{}]*)\}\}/g,(m,a)=>{const p=a.split('|').filter(x=>x&&!/=/.test(x));return p.length?'('+p.join(', ')+')':''})
+  .replace(/\{\{[^{}]*\}\}/g,'').replace(/\{\{[^{}]*\}\}/g,'')
+  .replace(/\[\[(?:[^\]|]*\|)?([^\]]*)\]\]/g,'$1')
+  .replace(/'{2,}/g,'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').replace(/\(\s*\)/g,'').trim();
+const cleanTopic=s=>String(s||'').trim()
+  .replace(/^(?:was|wer|wo|wann|wie|warum|what|who|where|when|how|why)\s+(?:ist|sind|war|waren|liegt|is|are|was|were|does|do|did)\s+(?:ein|eine|der|die|das|the|a|an)?\s*/i,'')
+  .replace(/^(?:erkläre|erklär|explain|wiki|wikipedia|info|infos zu|about|über|definiere|define|definition(?: von| of)?|bedeutung(?: von| of)?|was bedeutet|what does)\s+/i,'')
+  .replace(/[?!.]+$/,'').trim();
+const variants=w=>[...new Set(/^[A-ZÄÖÜ]/.test(w)?[w,w.toLowerCase()]:[w,cap(w)])];
+
+/* Deutsches Wiktionary (Wikitext) */
+function parseDe(wt){
+  const secs=[...wt.matchAll(/^==\s*([^=\n]+?)\s*\(([^)\n]+)\)\s*==\s*$/gm)];
+  if(!secs.length)return null;
+  let k=secs.findIndex(m=>/Deutsch/.test(m[2]));if(k<0)k=0;
+  const body=wt.slice(secs[k].index+secs[k][0].length,k+1<secs.length?secs[k+1].index:wt.length),L=body.split('\n');
+  const blk=n=>{const i=L.findIndex(l=>l.trim()==='{{'+n+'}}');if(i<0)return[];const o=[];for(let j=i+1;j<L.length;j++){if(!L[j].trim()||/^\s*(\{\{|=)/.test(L[j]))break;o.push(L[j])}return o};
+  const num=l=>wclean(l.replace(/^:+\s*/,'')).replace(/^\[(\d+[a-z]?(?:[–-]\d+)?)\]\s*/,'$1. ');
+  const defs=blk('Bedeutungen').map(num).filter(x=>x&&x.length>4).slice(0,5);
+  if(!defs.length)return null;
+  const hd=(body.match(/^===.*Wortart\|.*$/m)||[''])[0],pos=(hd.match(/Wortart\|([^|}]+)/)||[])[1]||'',g=(hd.match(/\{\{([mfn])\}\}/)||[])[1];
+  const items=n=>[...new Set(blk(n).map(l=>l.replace(/^:+\s*/,'')).join(';').replace(/\[\d+[a-z]?(?:[–-]\d+)?\]/g,';').split(/[;,]/).map(x=>wclean(x)).filter(x=>x&&x.length<40))].slice(0,8);
+  const first=n=>blk(n).map(l=>wclean(l.replace(/^:+\s*/,''))).filter(Boolean)[0]||'';
+  const ex=blk('Beispiele').map(num).map(x=>x.replace(/^\d+[a-z]?\.\s*/,'')).filter(Boolean).slice(0,2);
+  const ipa=((blk('Aussprache').join(' ').match(/\{\{Lautschrift\|([^}|]+)/))||[])[1]||'';
+  const lg=(secs[k][2].match(/Sprache\|([^}|]+)/)||[])[1]||secs[k][2].replace(/[{}]/g,'');
+  return{lang:lg.trim(),pos,art:g?({m:'der',f:'die',n:'das'})[g]:'',defs,syn:items('Synonyme'),ex,orig:first('Herkunft').slice(0,220),syl:first('Silbentrennung'),ipa}}
+async function deWikt(w){
+  for(const t of variants(w)){
+    const j=await jt('https://de.wiktionary.org/w/api.php?action=parse&prop=wikitext&redirects=1&format=json&origin=*&page='+encodeURIComponent(t)).catch(()=>null);
+    const wt=j&&j.parse&&j.parse.wikitext&&(j.parse.wikitext['*']||j.parse.wikitext);
+    if(typeof wt!=='string')continue;
+    const r=parseDe(wt);if(r)return Object.assign(r,{title:j.parse.title,url:'https://de.wiktionary.org/wiki/'+encodeURIComponent(j.parse.title)})}
+  return null}
+/* Englisches Wiktionary (REST) */
+async function enWikt(w){
+  for(const t of [...new Set([w.toLowerCase(),w,cap(w)])]){
+    const j=await jt('https://en.wiktionary.org/api/rest_v1/page/definition/'+encodeURIComponent(t)).catch(()=>null);
+    const ks=j?Object.keys(j):[];if(!ks.length)continue;
+    const k=ks.includes('en')?'en':ks[0],ent=j[k]||[],defs=[],ex=[];
+    ent.forEach(e=>(e.definitions||[]).slice(0,3).forEach(d=>{const x=wtxt(d.definition);if(x)defs.push((e.partOfSpeech?e.partOfSpeech+': ':'')+x);(d.examples||[]).slice(0,1).forEach(z=>{const y=wtxt(z);if(y)ex.push(y)})}));
+    if(defs.length)return{lang:(ent[0]&&ent[0].language)||k,pos:[...new Set(ent.map(e=>e.partOfSpeech).filter(Boolean))].join(', '),art:'',defs:defs.slice(0,5),syn:[],ex:ex.slice(0,2),title:t,url:'https://en.wiktionary.org/wiki/'+encodeURIComponent(t)}}
+  return null}
+async function enDict(w){
+  const j=await jt('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(w.toLowerCase())),e=j&&j[0];if(!e)return null;
+  const defs=[],syn=new Set(),ex=[];
+  (e.meanings||[]).slice(0,3).forEach(m=>{(m.definitions||[]).slice(0,2).forEach(x=>{defs.push((m.partOfSpeech?m.partOfSpeech+': ':'')+x.definition);if(x.example)ex.push(x.example)});(m.synonyms||[]).forEach(s=>syn.add(s))});
+  const ph=e.phonetic||((e.phonetics||[]).find(p=>p.text)||{}).text||'';
+  return defs.length?{lang:X('Englisch','English'),pos:'',art:'',defs:defs.slice(0,5),syn:[...syn].slice(0,8),ex:ex.slice(0,2),ipa:ph,title:e.word,url:'https://en.wiktionary.org/wiki/'+encodeURIComponent(w.toLowerCase())}:null}
+async function lookupWord(w){
+  const [de,en]=await Promise.all([deWikt(w).catch(()=>null),enWikt(w).catch(()=>null)]);
+  let d=uiLang==='de'?(de||en):(en||de);
+  if(!d)d=await enDict(w).catch(()=>null);
+  return d}
+/* Wikipedia-Suche mit Tippfehler-Vorschlag */
+async function wikiSearch(lg,t){
+  const j=await jt('https://'+lg+'.wikipedia.org/w/api.php?action=query&list=search&srsearch='+encodeURIComponent(t)+'&srlimit=6&srprop=&srinfo=suggestion&format=json&origin=*').catch(()=>null),qy=j&&j.query;
+  return{hits:((qy&&qy.search)||[]).map(h=>h.title),sug:(qy&&qy.searchinfo&&qy.searchinfo.suggestion)||''}}
+/* Zusammengesetzte Wörter zerlegen (Rittermanager → Ritter + Manager) */
+async function existing(titles,lg){
+  const arr=[...titles],out=new Set(),chunks=[];for(let k=0;k<arr.length;k+=50)chunks.push(arr.slice(k,k+50));
+  await Promise.all(chunks.map(ch=>jt('https://'+lg+'.wiktionary.org/w/api.php?action=query&format=json&origin=*&titles='+encodeURIComponent(ch.join('|'))).then(j=>{const p=j&&j.query&&j.query.pages;if(p)Object.values(p).forEach(x=>{if(x.missing===undefined&&x.invalid===undefined&&x.title)out.add(x.title)})}).catch(()=>{})));
+  return out}
+async function splitCompound(w){
+  const lw=w.toLowerCase();if(lw.length<7||/[^\p{L}]/u.test(lw))return null;
+  const pairs=[],titles=new Set();
+  for(let i=3;i<=lw.length-3;i++){const b=lw.slice(i),a0=lw.slice(0,i);
+    for(const f of ['','s','es','n','en','e','er']){
+      if(f&&(!a0.endsWith(f)||a0.length-f.length<3))continue;
+      const a=f?a0.slice(0,-f.length):a0;pairs.push([a,b,f]);[a,b,cap(a),cap(b)].forEach(t=>titles.add(t))}}
+  const [d1,e1]=await Promise.all([existing(titles,'de'),existing(titles,'en')]),ex=new Set([...d1,...e1]);
+  let best=null,bs=-1;
+  for(const [a,b,f] of pairs){
+    const A=[cap(a),a].find(t=>ex.has(t)),B=[cap(b),b].find(t=>ex.has(t));if(!A||!B)continue;
+    const sc=Math.min(a.length,b.length)*10-(f?3:0);if(sc>bs){bs=sc;best={a:A,b:B,f}}}
+  return best}
+async function describeWord(w){
+  const d=await lookupWord(w).catch(()=>null);
+  if(d&&d.defs&&d.defs[0])return d.defs[0].replace(/^\d+\.\s*/,'').slice(0,180);
+  const s=(await wsum(uiLang,cap(w)).catch(()=>null))||(await wsum(uiLang==='de'?'en':'de',cap(w)).catch(()=>null));
+  return s&&s.extract?s.extract.split(/(?<=[.!?])\s/)[0].slice(0,180):''}
+async function xlate(w,from){const to=from==='de'?'en':'de';
+  try{const j=await jt('https://api.mymemory.translated.net/get?q='+encodeURIComponent(w)+'&langpair='+from+'|'+to),t=j&&j.responseData&&j.responseData.translatedText;
+    return t&&!/MYMEMORY|INVALID/i.test(t)&&norm(t)!==norm(w)?[to,t]:null}catch(_){return null}}
+async function dictInfo(w,d,wi,wexact){
+  const from=/Deutsch|German/i.test(d.lang)?'de':/Englisch|English/i.test(d.lang)?'en':'',tr=from?await xlate(w,from):null,F=[];
+  if(d.syn&&d.syn.length)F.push([X('Synonyme','Synonyms'),d.syn.join(', ')]);
+  if(tr)F.push([tr[0]==='en'?X('Englisch','English'):X('Deutsch','German'),tr[1]]);
+  if(d.ex&&d.ex.length)F.push([X('Beispiel','Example'),d.ex[0]]);
+  if(d.syl)F.push([X('Silbentrennung','Syllables'),d.syl]);
+  if(d.ipa)F.push([X('Aussprache','Pronunciation'),/^[\[\/]/.test(d.ipa)?d.ipa:'['+d.ipa+']']);
+  if(d.orig)F.push([X('Herkunft','Origin'),d.orig]);
+  if(wi&&wexact)F.push(['Wikipedia',wi.title]);
+  const defs=d.defs.map(x=>x.replace(/^\d+[a-z]?\.\s*/,'')),
+    info={icon:'book',title:(d.art?d.art+' ':'')+(d.title||w),subtitle:[d.pos,d.lang].filter(Boolean).join(' · '),
+      badge:wi&&wexact?X('Wörterbuch + Wikipedia','Dictionary + Wikipedia'):X('Wörterbuch','Dictionary'),
+      hero:defs[0].slice(0,220),points:defs.slice(1),facts:F,related:[]};
+  if(wi&&wexact){Object.assign(info,{text:wi.text,fullText:wi.fullText,img:wi.img,link:wi.link,linkLabel:wi.linkLabel,wiki:wi.wiki,moreLabel:wi.moreLabel});
+    if(d.url)info.moreHtml='<a href="'+esc(d.url)+'" target="_blank" rel="noopener">Wiktionary ↗</a>'}
+  else{info.fullText=[...defs.map((x,i)=>(i+1)+'. '+x),...(d.ex||[]).map(x=>X('Beispiel: ','Example: ')+x)].join('\n');
+    info.link=d.url;info.linkLabel=X('Wiktionary öffnen ↗','Open Wiktionary ↗');info.moreLabel=X('Mehr Informationen','More information')}
+  info.related=(d.syn||[]).slice(0,3);
+  return info}
+const addRel=(info,list)=>{const seen=new Set([norm(info.title)]);info.related=[...(info.related||[]),...list].filter(x=>{const n=norm(x);if(!x||!n||seen.has(n))return false;seen.add(n);return true}).slice(0,6);return info};
+
+const _wjOld=wikiJob;
+wikiJob=async function(s){
+  const topic=cleanTopic(s);if(!topic)return null;
+  const single=/^[\p{L}][\p{L}\p{M}'’-]*$/u.test(topic),nt=norm(topic);
+  const [dict,wiki,srch]=await Promise.all([single?lookupWord(topic).catch(()=>null):null,_wjOld(topic).catch(()=>null),wikiSearch(uiLang,topic)]);
+  const nw=wiki?norm(wiki.title):'',wexact=!!wiki&&(!nt||!nw||nw.startsWith(nt)||nt.startsWith(nw));
+  const hits=[srch.sug,...srch.hits].filter(Boolean);
+  if(dict)return addRel(await dictInfo(topic,dict,wiki,wexact),[...hits,...(wiki&&!wexact?[wiki.title]:[])]);
+  if(wiki&&(wexact||!single))return addRel(wiki,hits);
+  if(single){
+    const sp=await splitCompound(topic).catch(()=>null);
+    if(sp){const [da,db]=await Promise.all([describeWord(sp.a),describeWord(sp.b)]);
+      return addRel({icon:'book',title:cap(topic),subtitle:X('Zusammengesetztes Wort','Compound word'),badge:X('Wortzerlegung','Word split'),hero:sp.a+' + '+sp.b,
+        text:X('„'+cap(topic)+'“ habe ich nicht als eigenen Eintrag gefunden – es könnte ein Name, Fachbegriff oder Spielname sein. Das Wort lässt sich aber in '+sp.a+' und '+sp.b+' zerlegen.',
+          '“'+cap(topic)+'” has no entry of its own – it may be a name, term or title. It can be split into '+sp.a+' and '+sp.b+'.'),
+        facts:[[sp.a,da||'—'],[sp.b,db||'—']],related:[sp.a,sp.b]},[...hits,...(wiki?[wiki.title]:[])])}}
+  if(wiki){wiki.subtitle=X('Nächster Treffer zu „'+topic+'“','Closest match for “'+topic+'”')+(wiki.subtitle?' · '+wiki.subtitle:'');return addRel(wiki,hits)}
+  return addRel({icon:'spark',title:topic,subtitle:X('Nichts Passendes gefunden','No match found'),
+    text:srch.sug?X('Meintest du „'+srch.sug+'“?','Did you mean “'+srch.sug+'”?'):X('Dazu habe ich keinen Eintrag gefunden. Probiere eine andere Schreibweise oder einen Teil des Wortes.','I found no entry. Try another spelling or part of the word.'),related:[]},hits)};
+
+
 /* Bilinguale Zahlen-Fakten (überschreibt hardcodiertes DE) */
 numInfo=function(s){const n=BigInt(s),N=Number(s);let f=[],x=N;const ok=N>1&&N<=9e13;
   if(ok){for(let p=2;p*p<=x;p+=p===2?1:2)while(x%p===0){f.push(p);x/=p}if(x>1)f.push(x)}
@@ -3558,12 +3691,12 @@ displayResult=function(r,raw){_dr(r,raw);const i=r&&r.info,el=Z('pfVisualResult'
 
 const _rq=runAsyncQuery;
 runAsyncQuery=async function(r){
-  const smart=r.async==='smart'||r.async==='wiki';
+  const smart=r.async==='smart'||r.async==='wiki'||r.async==='define';
   if(r.async!=='lvx'&&!smart)return _rq(r);
   if(smart&&await getSample())return _rq(r);
   status.classList.add('is-busy');status.classList.remove('is-done');status.textContent=X('Denkt nach …','Thinking …');setLoader(true);
   let info=null;
-  try{info=r.async==='lvx'?await r.job():await wikiJob(r.query||r.topic||r.formula)}
+  try{info=r.async==='lvx'?await r.job():await wikiJob(r.query||r.topic||r.word||r.formula)}
   catch(e){info={icon:'x',title:X('Das hat nicht geklappt','That did not work'),text:X('Für diese Anfrage werden Live-Daten gebraucht, die gerade nicht erreichbar sind. Bitte später erneut versuchen.','This query needs live data that is unreachable right now. Please try again later.')}}
   if(!info)info={icon:'x',title:X('Nichts gefunden','Nothing found'),text:X('Dazu habe ich nichts gefunden. Formuliere es etwas anders, z. B. „wer war Albert Einstein“.','I found nothing. Try rephrasing, e.g. “who was Albert Einstein”.')};
   displayResult(mk(smart?X('Wissen','Knowledge'):r.t,info),q.value);
